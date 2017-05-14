@@ -50,8 +50,8 @@ autoencoder.fit(x_train, x_train,
                 validation_data=(x_test, x_test))
 
 # save
-autoencoder.save_weights('autoencoder.h5')
-autoencoder.load_weights('autoencoder.h5')
+autoencoder.save_weights('res/autoencoder_2d/autoencoder.h5')
+autoencoder.load_weights('res/autoencoder_2d/autoencoder.h5')
 
 # output middle layer 
 intermediate_model = Model(inputs=autoencoder.input, 
@@ -59,7 +59,13 @@ intermediate_model = Model(inputs=autoencoder.input,
 intermediate_model.compile(optimizer='adadelta', loss='binary_crossentropy')
 intermediate_output = intermediate_model.predict(x_train)
 
-h5file = h5py.File('res/autoencoder_2d/auto_2d_feature128_0513.hdf5','w')
+h5file = h5py.File('res/autoencoder_2d/auto_2d_feature128_0513_train.hdf5','w')
+h5file.create_dataset('MR',data= intermediate_output)
+h5file.close()
+
+intermediate_output = intermediate_model.predict(x_test)
+
+h5file = h5py.File('res/autoencoder_2d/auto_2d_feature128_0513_testA.hdf5','w')
 h5file.create_dataset('MR',data= intermediate_output)
 h5file.close()
 

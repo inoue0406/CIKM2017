@@ -14,7 +14,7 @@ RMSE <- function(x){
 
 D <- read.csv("processed/train/gauge_ts_train.csv")
 
-file <- h5file("res/autoencoder_2d/auto_2d_feature128_0513_train.hdf5")
+file <- h5file("res/autoencoder_3d/auto_3d_feature128_0514_train.hdf5")
 # Save testvec in group 'test' as DataSet 'testvec'
 MR <- file["MR"]
 Dt <- cbind(rain=D$rain,as.data.frame(MR[,]))
@@ -40,7 +40,7 @@ sqrt(mean(oss.sell.rf$mse))
 
 # ---------------------------------
 # (2) prediction
-file <- h5file("res/autoencoder_2d/auto_2d_feature128_0513_testA.hdf5")
+file <- h5file("res/autoencoder_3d/auto_3d_feature128_0514_testA.hdf5")
 # Save testvec in group 'test' as DataSet 'testvec'
 MR <- file["MR"]
 Dt <- as.data.frame(MR[,])
@@ -50,5 +50,5 @@ pred.y <- predict(oss.sell.rf,newdata=Dt)
 
 # write output
 dout <- data.frame(round(pred.y,digits=1))
-write.table(dout,"res/autoencoder_2d/rf_result.csv",
+write.table(dout,"res/autoencoder_3d/rf_result.csv",
             row.names=FALSE,col.names = FALSE,eol="\n")

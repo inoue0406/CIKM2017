@@ -30,15 +30,13 @@ h5file.close()
 # ---------------
 input_img = Input(shape=(nx*ny*nz,))
 
-encoded = Dense(1024, activation='relu')(input_img)
-encoded = Dense(512, activation='relu')(encoded)
+encoded = Dense(512, activation='relu')(input_img)
 encoded = Dense(256, activation='relu')(encoded)
 encoded = Dense(128, activation='relu')(encoded)
 
 decoded = Dense(256, activation='relu')(encoded)
 decoded = Dense(512, activation='relu')(decoded)
-decoded = Dense(1024, activation='relu')(decoded)
-decoded = Dense(nx*ny, activation='sigmoid')(decoded)
+decoded = Dense(nx*ny*nz, activation='sigmoid')(decoded)
 
 autoencoder = Model(inputs=input_img, outputs=decoded)
 
@@ -52,8 +50,9 @@ autoencoder.fit(x_train, x_train,
                 validation_data=(x_test, x_test))
 
 # save
-autoencoder.save_weights('autoencoder.h5')
-autoencoder.load_weights('autoencoder.h5')
+autoencoder.save_weights('res/autoencoder_2d/autoencoder.h5')
+autoencoder.load_weights('res/autoencoder_2d/autoencoder.h5')
+
 
 # output middle layer 
 intermediate_model = Model(inputs=autoencoder.input, 
@@ -61,7 +60,13 @@ intermediate_model = Model(inputs=autoencoder.input,
 intermediate_model.compile(optimizer='adadelta', loss='binary_crossentropy')
 intermediate_output = intermediate_model.predict(x_train)
 
-h5file = h5py.File('res/autoencoder_2d/auto_2d_feature128_0513.hdf5','w')
+h5file = h5py.File('res/autoencoder_3d/auto_3d_feature128_0514_train.hdf5','w')
+h5file.create_dataset('MR',data= intermediate_output)
+h5file.close()
+
+intermediate_output = intermediate_model.predict(x_test)
+
+h5file = h5py.File('res/autoencoder_3d/auto_3d_feature128_0514_testA.hdf5','w')
 h5file.create_dataset('MR',data= intermediate_output)
 h5file.close()
 
@@ -79,14 +84,16 @@ plt.figure(figsize=(40, 8))
 for i in range(n):
     # オリジナルのテスト画像を表示
     ax = plt.subplot(2, n, i+1)
-    plt.imshow(x_test[i].reshape(34, 34))
+    x3d = x_test[i].reshape(34, 34, 4)
+    plt.imshow(x3d[:,:,3])
     plt.gray()
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
     # 変換された画像を表示
     ax = plt.subplot(2, n, i+1+n)
-    plt.imshow(decoded_imgs[i].reshape(34, 34))
+    x3d = decoded_imgs[i].reshape(34, 34, 4)
+    plt.imshow(x3d[:,:,3])
     plt.gray()
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
