@@ -6,7 +6,8 @@ library("h5")
 
 setwd("C:\\home\\CIKM2017")
 
-library(randomForest)
+#library(randomForest)
+library(ranger)
 
 RMSE <- function(x){
   return(sqrt(mean(x^2)))
@@ -26,17 +27,22 @@ vnames <- vnames[2:129]
 vnames1 <- paste(vnames,collapse="+")
 rf.form <- as.formula(paste("rain",vnames1,sep=" ~ "))
 
+# tuning
+# tuneRF(Dt[,-1],Dt[,1],doBest=T)
+# mtry = 84Ç≈Ç§Ç‹Ç≠Ç¢Ç©Ç»Ç©Ç¡ÇΩÅB
+
 # run model
-oss.sell.rf <- randomForest(rf.form,
-                            Dt,
-                            ntree=500,
-                            importance=T)
-# åvéZéûä‘ÇTï™Ç≠ÇÁÇ¢
-# 0:45 -> 1:01Ç…ÇÕÇ®ÇÌÇ¡ÇƒÇ¢ÇΩÅB
+#oss.sell.rf <- randomForest(rf.form,
+#                            Dt,
+#                            ntree=500,
+#                            importance=T)
+oss.sell.rf <- ranger(rf.form,
+                      Dt,mtry=84, # 2-84
+                      num.trees=500)
 
 # RMSE
-sqrt(mean(oss.sell.rf$mse))
-# 12.83509
+sqrt(mean(oss.sell.rf$prediction.error))
+# 12.03
 
 # ---------------------------------
 # (2) prediction
@@ -46,9 +52,9 @@ MR <- file["MR"]
 Dt <- as.data.frame(MR[,])
 h5close(file)
 
-pred.y <- predict(oss.sell.rf,newdata=Dt)
+pred.y <- predict(oss.sell.rf,data=Dt)
 
 # write output
-dout <- data.frame(round(pred.y,digits=1))
-write.table(dout,"res/autoencoder_3d/rf_result.csv",
+dout <- data.frame(round(pred.y$predictions,digits=1))
+write.table(dout,"res/autoencoder_3d/rf_result84.csv",
             row.names=FALSE,col.names = FALSE,eol="\n")
