@@ -3,7 +3,6 @@
 # used 2d image feature by autoencoder as independent variable
 # use alltime data
 # model2 : also use the past data as feature
-# ??
 #
 library("h5")
 
@@ -24,8 +23,8 @@ MR <- file["MR"]
 MR_t <- MR[,]
 Dt <- cbind(rain=D$rain)
 
-#use_time <- c(14,15)
-use_time <- c(15)
+use_time <- c(14,15)
+#use_time <- c(15)
 for(ut in use_time){
   v <- rep(FALSE,15)
   v[ut] <- TRUE
@@ -62,7 +61,7 @@ for(i in 1:nf){
 
 # run model
 oss.sell.rf <- ranger(rf.form,
-                      Dt,mtry=3, # 2-84
+                      Dt,mtry=12, # 2-84
                       num.trees=500)
 
 # RMSE
@@ -76,8 +75,8 @@ MR <- file["MR"]
 MR_t <- MR[,]
 Dt <- data.frame(row.names=1:2000)
 
-#use_time <- c(14,15)
-use_time <- c(15)
+use_time <- c(14,15)
+#use_time <- c(15)
 for(ut in use_time){
   v <- rep(FALSE,15)
   v[ut] <- TRUE
