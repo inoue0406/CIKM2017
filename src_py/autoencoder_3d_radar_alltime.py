@@ -41,7 +41,7 @@ decoded = Dense(nx*ny*nz, activation='sigmoid')(decoded)
 
 autoencoder = Model(inputs=input_img, outputs=decoded)
 
-autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+autoencoder.compile(optimizer='adadelta', loss='mean_squared_error')
 
 # fitting
 autoencoder.fit(x_train, x_train,
@@ -60,13 +60,13 @@ intermediate_model = Model(inputs=autoencoder.input,
 intermediate_model.compile(optimizer='adadelta', loss='binary_crossentropy')
 intermediate_output = intermediate_model.predict(x_train)
 
-h5file = h5py.File('res/autoencoder_3d_alltime/auto_3d_feature128_0515_train_alltime.hdf5','w')
+h5file = h5py.File('res/autoencoder_3d_alltime/auto_3d_feature128_0523_train_alltime.hdf5','w')
 h5file.create_dataset('MR',data= intermediate_output)
 h5file.close()
 
 intermediate_output = intermediate_model.predict(x_test)
 
-h5file = h5py.File('res/autoencoder_3d_alltime/auto_3d_feature128_0515_testA_alltime.hdf5','w')
+h5file = h5py.File('res/autoencoder_3d_alltime/auto_3d_feature128_0523_testA_alltime.hdf5','w')
 h5file.create_dataset('MR',data= intermediate_output)
 h5file.close()
 
