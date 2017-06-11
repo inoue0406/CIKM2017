@@ -13,8 +13,9 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import SGD
 
 from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn import cross_validation
-from sklearn import grid_search
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
+from keras.utils.vis_utils import plot_model
 
 #----------
 os.chdir('C:/home/CIKM2017')
@@ -54,12 +55,23 @@ y_test = g2["rain"].values
 
 def neural_model1():
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(nx,ny,nz)))
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu', input_shape=(nx,ny,nz)))
+    model.add(Dropout(0.4))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Dropout(0.4))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(Dropout(0.4))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.4))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(16, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='linear'))
     model.compile(loss='mean_squared_error',
@@ -67,17 +79,24 @@ def neural_model1():
                   metrics=['mean_squared_error'])
     return model
  
+#plot_model(neural_model1)    
+
 # CV
-model = KerasRegressor(build_fn=neural_model1, epochs=10, batch_size=50, verbose=2)
-results = cross_validation.cross_val_score(model, x_train, y_train, cv=5, scoring = "mean_squared_error")
+model = KerasRegressor(build_fn=neural_model1, epochs=100, batch_size=100, verbose=2)
+#results = cross_validation.cross_val_score(model, x_train, y_train, cv=5, scoring = "mean_squared_error")
+results = cross_val_score(model, x_train, y_train, cv=5, scoring = "mean_squared_error")
+print(results)
 print("Model1:" + str(results.mean()))
 
 # grid search
 model = KerasRegressor(build_fn=neural_model1, verbose=2)
 parameters = {'epochs':[10,20,40,60],'batch_size':[20,50,100,200]}
-grid = grid_search.GridSearchCV(model,parameters,n_jobs=1,
+grid = GridSearchCV(model,parameters,n_jobs=1,
                                 scoring="neg_mean_absolute_error",cv=5,verbose=2)
 grid_result = grid.fit(x_train, y_train)
+
+print(grid_result.best_params_)
+grid_result.cv_results_
 
 #----------------------------- 
 # Fit model on all the training data
