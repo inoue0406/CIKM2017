@@ -1,11 +1,13 @@
 """ 
 Using LSTM for CYKM2017 prediction
+ConvLSTM + regression
 """
-
+import pandas
 import h5py
 import os
 
 from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv3D
 from keras.layers.convolutional_recurrent import ConvLSTM2D
 from keras.layers.normalization import BatchNormalization
@@ -36,6 +38,12 @@ x_test =  x_test/np.max(x_test) # regularize to [0-1]
 x_test =  x_test.reshape(Nt, nx, ny, nz, nt)
 h5file.close()
 
+# gauge obs data
+g1 = pandas.read_csv("processed/train/gauge_ts_train.csv")
+y_train = g1["rain"].values
+g2 = pandas.read_csv("processed/testA/gauge_ts_testA.csv")
+y_test = g2["rain"].values
+
 # select only one vertical layer
 #x_train_s = x_train[:,:,:,:,[1]] # [] is needed for keeping dimension info
 #x_test_s = x_train[:,:,:,:,[1]] 
@@ -45,11 +53,8 @@ x_test_s = x_train[:,0:nt:2,:,:,[1]]
 nt2 = 8 # every 2 step
 
 # input and output for Conv-LSTM layear
-# "out" is one time-step ahead of "in"
-x_train_in  = x_train_s[:,0:(nt2-1),:,:,:] 
-x_train_out = x_train_s[:,1:nt2,:,:,:] 
-x_test_in   = x_test_s[:,0:(nt2-1),:,:,:] 
-x_test_out  = x_test_s[:,1:nt2,:,:,:] #
+x_train_in  = x_train_s 
+x_test_in   = x_test_s
 
 # --------------------------
 # model
@@ -60,7 +65,7 @@ x_test_out  = x_test_s[:,1:nt2,:,:,:] #
 
 seq = Sequential()
 seq.add(ConvLSTM2D(filters=20, kernel_size=(3, 3),
-                   input_shape=(None, nx, ny, 1),
+                   input_shape=(nt2, nx, ny, 1),
                    padding='same', return_sequences=True))
 seq.add(BatchNormalization())
 
@@ -79,54 +84,32 @@ seq.add(BatchNormalization())
 seq.add(Conv3D(filters=1, kernel_size=(3, 3, 3),
                activation='sigmoid',
                padding='same', data_format='channels_last'))
-seq.compile(loss='binary_crossentropy', optimizer='adadelta')
+# regression layer
+seq.add(Flatten())
+#seq.add(Dropout(0.5))
+seq.add(Dense(1, activation='linear'))
+
+seq.compile(loss='mean_squared_error', optimizer='adadelta')
+# print for chk
+seq.summary()
 
 #SVG(model_to_dot(seq, show_shapes=True).create(prog='dot', format='svg'))
 
 # ---------------------------------------------------
 # training
 
-seq.fit(x_train_in, x_train_out, batch_size=10,
+seq.fit(x_train_in, y_train, batch_size=10,
         epochs=300, validation_split=0.1)
 
+seq.save_weights('res/convlstm/conv_lstm_2d_reg.h5')
+seq.load_weights('res/convlstm/conv_lstm_2d_reg.h5')
 
-seq.save_weights('res/convlstm/conv_lstm_2d.h5')
-seq.load_weights('res/convlstm/conv_lstm_2d.h5')
+# test
+y_pred = seq.predict(x_test_in, batch_size=32, verbose=0)
 
-# Testing the network on one movie
-# feed it with the first 7 positions and then
-# predict the new positions
-which = 130
-track = x_train_in[which][:5, ::, ::, ::]
+# save the results
+df = pandas.DataFrame(y_pred)
+df.to_csv("res/convlstm/pred_convlstm_reg.csv",
+          index=False,header=False,float_format='%7.3f')
 
-for j in range(9):
-    new_pos = seq.predict(track[np.newaxis, ::, ::, ::, ::])
-    new = new_pos[::, -1, ::, ::, ::] # use last "predicted" frame
-    track = np.concatenate((track, new), axis=0)
 
-# And then compare the predictions
-# to the ground truth
-track2 = x_train_out[which][::, ::, ::, ::]
-for i in range(14):
-    fig = plt.figure(figsize=(10, 5))
-    print("i={0}".format(i))
-
-    ax = fig.add_subplot(121)
-
-    if i >= 7:
-        ax.text(1, 3, 'Predictions !', fontsize=20, color='w')
-    else:
-        ax.text(1, 3, 'Inital trajectory', fontsize=20)
-
-    toplot = track[i, ::, ::, 0]
-
-    plt.imshow(toplot)
-    ax = fig.add_subplot(122)
-
-    if i <= 7:
-        plt.text(1, 3, 'Ground truth', fontsize=20)
-        toplot = track2[i-1, ::, ::, 0]
-        plt.imshow(toplot)
-        
-    plt.savefig('%i_animate.png' % (i + 1))
-    
