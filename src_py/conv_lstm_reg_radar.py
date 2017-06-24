@@ -35,7 +35,7 @@ h5file.close()
 h5file = h5py.File('processed/for_python/radar_testA_3d_ds3_alltime.hdf5','r')
 x_test =  h5file['MR'].value
 x_test =  x_test/np.max(x_test) # regularize to [0-1]
-x_test =  x_test.reshape(Nt, nx, ny, nz, nt)
+x_test =  x_test.reshape(Nt, nt, nx, ny, nz)
 h5file.close()
 
 # gauge obs data
@@ -48,7 +48,7 @@ y_test = g2["rain"].values
 #x_train_s = x_train[:,:,:,:,[1]] # [] is needed for keeping dimension info
 #x_test_s = x_train[:,:,:,:,[1]] 
 x_train_s = x_train[:,0:nt:2,:,:,[1]] # [] is needed for keeping dimension info
-x_test_s = x_train[:,0:nt:2,:,:,[1]] 
+x_test_s = x_test[:,0:nt:2,:,:,[1]] 
 
 nt2 = 8 # every 2 step
 
@@ -88,6 +88,7 @@ seq.add(Conv3D(filters=1, kernel_size=(3, 3, 3),
 seq.add(Flatten())
 #seq.add(Dropout(0.5))
 seq.add(Dense(1, activation='linear'))
+
 
 seq.compile(loss='mean_squared_error', optimizer='adadelta')
 # print for chk
