@@ -40,7 +40,7 @@ h5file.close()
 #x_train_s = x_train[:,:,:,:,[1]] # [] is needed for keeping dimension info
 #x_test_s = x_train[:,:,:,:,[1]] 
 x_train_s = x_train[:,0:nt:2,:,:,[1]] # [] is needed for keeping dimension info
-x_test_s = x_train[:,0:nt:2,:,:,[1]] 
+x_test_s = x_test[:,0:nt:2,:,:,[1]] 
 
 nt2 = 8 # every 2 step
 
