@@ -30,7 +30,7 @@ h5file.close()
 
 # change shape
 # use only 3th and 5th time step
-lyr = 1
+lyr = 0
 x_train = x_train[:,[2,4],:,:,lyr].reshape(N,2*nx*ny)
 x_test = x_test[:,[2,4],:,:,lyr].reshape(Nt,2*nx*ny)
 

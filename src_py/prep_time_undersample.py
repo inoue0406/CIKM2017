@@ -24,7 +24,7 @@ x_train =  h5file['MR'].value
 x_train =  x_train.reshape(N, nt, nx, ny, nz)
 h5file.close()
 # 
-h5file = h5py.File('processed/for_python/radar_testA_3d_ds3_alltime.hdf5','r')
+h5file = h5py.File('processed/for_python/radar_testB_3d_ds3_alltime.hdf5','r')
 x_test =  h5file['MR'].value
 x_test =  x_test.reshape(Nt, nt, nx, ny, nz)
 h5file.close()
@@ -36,6 +36,6 @@ h5file = h5py.File('processed/for_python/radar_train_3d_ds3_dt3.hdf5','w')
 h5file.create_dataset('MR',data= x_train_s)
 h5file.close()
 
-h5file = h5py.File('processed/for_python/radar_testA_3d_ds3_dt3.hdf5','w')
+h5file = h5py.File('processed/for_python/radar_testB_3d_ds3_dt3.hdf5','w')
 h5file.create_dataset('MR',data= x_test_s)
 h5file.close()
